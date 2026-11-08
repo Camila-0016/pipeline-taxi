@@ -1,0 +1,28 @@
+# Contrato de esquema destino - taxis amarillos de NYC (TLC).
+# origen:    nombre de la columna tal como viene en el archivo
+# destino:   nombre normalizado (snake_case) que usa el pipeline
+# tipo:      tipo de dato que debe tener en la tabla unificada
+# requerida: si es true y falta en un archivo, el pipeline falla
+version: 1
+columnas:
+  - {origen: VendorID,              destino: vendor_id,              tipo: INTEGER,   requerida: true}
+  - {origen: tpep_pickup_datetime,  destino: tpep_pickup_datetime,   tipo: TIMESTAMP, requerida: true}
+  - {origen: tpep_dropoff_datetime, destino: tpep_dropoff_datetime,  tipo: TIMESTAMP, requerida: true}
+  - {origen: passenger_count,       destino: passenger_count,        tipo: BIGINT,    requerida: true}
+  - {origen: trip_distance,         destino: trip_distance,          tipo: DOUBLE,    requerida: true}
+  - {origen: RatecodeID,            destino: ratecode_id,            tipo: BIGINT,    requerida: true}
+  - {origen: store_and_fwd_flag,    destino: store_and_fwd_flag,     tipo: VARCHAR,   requerida: true}
+  - {origen: PULocationID,          destino: pu_location_id,         tipo: INTEGER,   requerida: true}
+  - {origen: DOLocationID,          destino: do_location_id,         tipo: INTEGER,   requerida: true}
+  - {origen: payment_type,          destino: payment_type,           tipo: BIGINT,    requerida: true}
+  - {origen: fare_amount,           destino: fare_amount,            tipo: DOUBLE,    requerida: true}
+  - {origen: extra,                 destino: extra,                  tipo: DOUBLE,    requerida: true}
+  - {origen: mta_tax,               destino: mta_tax,                tipo: DOUBLE,    requerida: true}
+  - {origen: tip_amount,            destino: tip_amount,             tipo: DOUBLE,    requerida: true}
+  - {origen: tolls_amount,          destino: tolls_amount,           tipo: DOUBLE,    requerida: true}
+  - {origen: improvement_surcharge, destino: improvement_surcharge,  tipo: DOUBLE,    requerida: true}
+  - {origen: total_amount,          destino: total_amount,           tipo: DOUBLE,    requerida: true}
+  - {origen: congestion_surcharge,  destino: congestion_surcharge,   tipo: DOUBLE,    requerida: true}
+  - {origen: Airport_fee,           destino: airport_fee,            tipo: DOUBLE,    requerida: true}
+  # Solo existe desde 2025. En los archivos de 2024 se completa con NULL.
+  - {origen: cbd_congestion_fee,    destino: cbd_congestion_fee,     tipo: DOUBLE,    requerida: false}

@@ -1,0 +1,12 @@
+taxi:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: taxi
+      password: taxi
+      dbname: taxi
+      schema: analytics
+      threads: 2

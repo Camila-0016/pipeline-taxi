@@ -1,0 +1,104 @@
+# Reglas de calidad de datos - taxis amarillos de NYC.
+# severidad: rechazo      -> la fila va a la tabla de cuarentena
+#            advertencia  -> la fila se conserva y se marca en la columna flags
+# condicion: SQL que vale verdadero cuando la fila VIOLA la regla.
+#            Puede usar las columnas de la tabla unificada, mas:
+#            zona_origen_id y zona_destino_id (NULL si la zona no existe en la
+#            tabla de zonas) y ocurrencia (1 = primera copia de una fila, 2 = duplicado).
+version: 1
+reglas:
+  - id: R01
+    nombre: subida_fuera_del_mes
+    descripcion: "La fecha de subida no pertenece al mes del archivo (o falta)."
+    severidad: rechazo
+    umbral: "mes de la subida distinto al mes del archivo"
+    justificacion: "Son 56 filas entre marzo 2024 y marzo 2025, con fechas tan absurdas como 2002 o 2007. La capa curada se particiona por año y mes: una fila de otro mes caería en una partición equivocada."
+    condicion: "tpep_pickup_datetime IS NULL OR strftime(tpep_pickup_datetime, '%Y-%m') <> substr(archivo_origen, 17, 7)"
+
+  - id: R02
+    nombre: bajada_no_posterior_a_subida
+    descripcion: "La bajada es anterior o igual a la subida (o falta)."
+    severidad: rechazo
+    umbral: "bajada <= subida"
+    justificacion: "La duración y la velocidad derivadas quedarían inválidas. Son 1.128 filas en 2024 y 22.280 en 2025; 21.481 de estas últimas son del proveedor 7 (vendor_id = 7), que siempre registra bajada igual a subida."
+    condicion: "tpep_dropoff_datetime IS NULL OR tpep_dropoff_datetime <= tpep_pickup_datetime"
+
+  - id: R03
+    nombre: distancia_no_positiva
+    descripcion: "La distancia del viaje es nula, cero o negativa."
+    severidad: advertencia
+    umbral: "distancia <= 0 millas"
+    justificacion: "Cerca del 2,5% de las filas (87.168 y 103.722). Alrededor del 95% tiene cobro (total mayor a 0) y casi 7 de cada 10 duran más de 1 minuto: son viajes cobrados con la distancia mal registrada, es decir ingreso real. Se marcan, no se descartan."
+    condicion: "trip_distance IS NULL OR trip_distance <= 0"
+
+  - id: R04
+    nombre: distancia_excesiva
+    descripcion: "La distancia del viaje supera el máximo plausible."
+    severidad: rechazo
+    umbral: "distancia > 100 millas"
+    justificacion: "El 99,9% de los viajes recorre menos de unas 29 millas; 100 es más de 3 veces ese valor. Hay 122 y 214 filas por encima, con máximos de hasta 320.136 millas."
+    condicion: "trip_distance > 100"
+
+  - id: R05
+    nombre: importe_total_negativo
+    descripcion: "El importe total es negativo."
+    severidad: rechazo
+    umbral: "total_amount < 0"
+    justificacion: "44.311 y 68.686 filas. Más del 99,9% son de pagos en efectivo, sin cargo o en disputa (tipos 2, 3 y 4): parecen ajustes o devoluciones, no viajes cobrados, y distorsionarían los ingresos."
+    condicion: "total_amount < 0"
+
+  - id: R06
+    nombre: pasajeros_nulo_o_cero
+    descripcion: "La cantidad de pasajeros es nula o igual a 0."
+    severidad: advertencia
+    umbral: "passenger_count nulo o 0"
+    justificacion: "Los pasajeros nulos (426.190 y 916.663 filas) coinciden exactamente con payment_type = 0 y ratecode_id nulo: es un patrón sistemático, no un error al azar. Rechazarlos descartaría el 13% de las filas de 2024 y el 22,7% de 2025 y falsearía la comparación entre meses. Tienen tarifa e importe válidos."
+    condicion: "passenger_count IS NULL OR passenger_count = 0"
+
+  - id: R07
+    nombre: zona_inexistente
+    descripcion: "La zona de origen o de destino no existe en la tabla de zonas."
+    severidad: rechazo
+    umbral: "pu_location_id o do_location_id ausente en taxi_zone_lookup"
+    justificacion: "Hoy hay 0 filas, pero sin zona no se puede enriquecer con barrio y nombre, y la regla protege contra datos futuros."
+    condicion: "zona_origen_id IS NULL OR zona_destino_id IS NULL"
+
+  - id: R08
+    nombre: fila_duplicada
+    descripcion: "La fila es idéntica, en todas sus columnas, a otra del mismo archivo."
+    severidad: rechazo
+    umbral: "todas las columnas iguales; se conserva la primera copia"
+    justificacion: "Hoy hay 0 filas duplicadas exactas. Un viaje repetido se contaría dos veces en viajes e ingresos."
+    condicion: "ocurrencia > 1"
+
+  - id: R09
+    nombre: velocidad_imposible
+    descripcion: "La velocidad promedio del viaje es físicamente imposible."
+    severidad: rechazo
+    umbral: "velocidad > 100 mph"
+    justificacion: "1.178 y 961 filas. Casi todas están muy por encima del límite (entre 60 y 100 mph hay solo unas 260 a 300), así que el umbral es poco sensible. El 85% (2024) y el 65% (2025) duran menos de 1 minuto: distancia o duración mal registradas."
+    condicion: "date_diff('second', tpep_pickup_datetime, tpep_dropoff_datetime) > 0 AND trip_distance > 0 AND trip_distance / (date_diff('second', tpep_pickup_datetime, tpep_dropoff_datetime) / 3600.0) > 100"
+
+  - id: R10
+    nombre: zona_desconocida
+    descripcion: "El origen o el destino es una zona sin ubicación real (264 o 265)."
+    severidad: advertencia
+    umbral: "pu_location_id o do_location_id en (264, 265)"
+    justificacion: "La zona 264 (N/A) y la 265 (Outside of NYC) existen en la tabla pero no son un lugar de la ciudad. Aparecen en entre el 0,2% y el 0,9% de las filas. Se marcan para poder excluirlas de los rankings de zonas."
+    condicion: "pu_location_id IN (264, 265) OR do_location_id IN (264, 265)"
+
+  - id: R11
+    nombre: duracion_excesiva
+    descripcion: "El viaje dura más de 24 horas."
+    severidad: rechazo
+    umbral: "duración > 24 horas"
+    justificacion: "20 y 11 filas, con viajes de hasta más de 6 días, cuando el 99,9% dura menos de unos 118 minutos. Arruinarían la duración media por zona y hora."
+    condicion: "date_diff('second', tpep_pickup_datetime, tpep_dropoff_datetime) > 86400"
+
+  - id: R12
+    nombre: tarifa_negativa
+    descripcion: "La tarifa base (fare_amount) es negativa."
+    severidad: advertencia
+    umbral: "fare_amount < 0"
+    justificacion: "58.464 filas en 2024 y 208.724 en 2025 (5%). En 2025, 140.446 de ellas tienen total NO negativo, así que no se pueden tratar como devoluciones. Afecta la tarifa media de las preguntas de negocio: se marcan para decidir caso por caso."
+    condicion: "fare_amount < 0"

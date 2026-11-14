@@ -1,7 +1,7 @@
 name: taxi
 version: "1.0.0"
 profile: taxi
-model-paths: ["models"]
+model-paths: ["../sql/modelo"]
 
 models:
   taxi:

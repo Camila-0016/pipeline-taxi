@@ -42,3 +42,8 @@ test:
 
 down:
 > docker compose down
+
+# Alternativa a "make all": el mismo pipeline orquestado por Dagster (grafo de activos)
+.PHONY: dagster
+dagster:
+> dagster asset materialize -f src/orquestacion.py --select "*" --config-json '{"ops": {"viajes_en_postgres": {"config": {"mes": "$(MES)"}}, "resultados_md": {"config": {"mes": "$(MES)"}}}}'

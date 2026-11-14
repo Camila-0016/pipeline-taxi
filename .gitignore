@@ -4,3 +4,5 @@ __pycache__/
 
 dbt/target/
 dbt/logs/
+
+.tmp_dagster_home_*/

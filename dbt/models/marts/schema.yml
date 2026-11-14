@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: fact_trips
+    columns:
+      - name: viaje_id
+        data_tests: [unique, not_null]
+      - name: zona_subida_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_zone')
+                field: zona_id
+      - name: zona_bajada_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_zone')
+                field: zona_id
+      - name: fecha_viaje
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: fecha
+  - name: dim_zone
+    columns:
+      - name: zona_id
+        data_tests: [unique, not_null]
+  - name: dim_date
+    columns:
+      - name: fecha
+        data_tests: [unique, not_null]

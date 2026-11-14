@@ -7,7 +7,7 @@ PYTHON ?= python
 
 .PHONY: all up ingesta esquema calidad carga dbt preguntas test down
 
-all: ingesta esquema calidad up carga dbt preguntas
+all: ingesta esquema calidad curada up carga dbt preguntas
 
 # 0. Levanta Postgres en Docker y espera a que este healthy
 up:
@@ -47,3 +47,8 @@ down:
 .PHONY: dagster
 dagster:
 > dagster asset materialize -f src/orquestacion.py --select "*" --config-json '{"ops": {"viajes_en_postgres": {"config": {"mes": "$(MES)"}}, "resultados_md": {"config": {"mes": "$(MES)"}}}}'
+
+# 3b. Capa curada: Parquet particionado year/month, con columnas derivadas y zonas
+.PHONY: curada
+curada:
+> $(PYTHON) src/curada.py --mes $(MES)

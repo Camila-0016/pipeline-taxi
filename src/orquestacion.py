@@ -34,7 +34,7 @@ def dbt(context, *argumentos):
 
 @asset(description="Ingesta, esquema, calidad y carga a Postgres (esquema raw) del mes y su comparación.")
 def viajes_en_postgres(context: AssetExecutionContext, config: ConfigMes):
-    for script in ("ingesta", "esquema", "calidad"):
+    for script in ("ingesta", "esquema", "calidad", "curada"):
         ejecutar(context, [sys.executable, f"src/{script}.py", "--mes", config.mes])
     ejecutar(context, ["docker", "compose", "up", "-d", "--wait"])  # Postgres recién acá, para ahorrar RAM
     ejecutar(context, [sys.executable, "src/cargar_postgres.py", "--mes", config.mes])

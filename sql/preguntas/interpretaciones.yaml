@@ -1,0 +1,14 @@
+01_top10_zonas_origen: |
+  Nueve de las diez zonas son de Manhattan; la unica de otro distrito es JFK Airport (Queens). Midtown Center lidera con 177778 viajes (+10.25%). Los mayores aumentos estan en zonas del sur de Manhattan (East Village +17.58%, Union Sq +16.41%, Penn Station +14.42%), y JFK Airport es la unica de las diez que baja (-0.66%).
+02_hora_mayor_ingreso: |
+  La hora con mayor ingreso promedio por viaje es las 5 AM en ambos meses (35.19 en 2024-03 y 33.75 en 2025-03). A esa hora hay pocos viajes y mas largos y caros; una explicacion plausible son los traslados al aeropuerto, aunque esta consulta no lo mide. El ingreso es el total pagado (total_amount).
+03a_pct_cbd: |
+  En 2025-03 el 73.89% de los viajes (2995164 de 4053277) pago el recargo de congestion (cbd_congestion_fee). El resto probablemente no toca la zona de cobro del sur de Manhattan. En 2024 el campo no existia (NULL), por eso solo se calcula para el mes asignado.
+03b_top5_zonas_cbd: |
+  Las cinco zonas con mayor proporcion son del sur de Manhattan, todas por encima de 99.7% (SoHo 99.78%, Greenwich Village South 99.73%, West Village 99.72%, Greenwich Village North 99.72%, East Village 99.71%), coherente con estar dentro de la zona de cobro. Se exigen al menos 1000 viajes por zona.
+04_propina_por_tipo_pago: |
+  Con tarjeta (tipo 1) la propina es 22.28% de la tarifa en 2024-03 y 22.53% en 2025-03. En efectivo (tipo 2) da 0.00%, pero no es interpretable. El taximetro solo registra las propinas pagadas con tarjeta; la propina en efectivo se entrega en mano y no queda registrada, asi que 0 significa no registrada y no que no hubo propina. Los tipos 3 (sin cargo) y 4 (disputa) rondan 0 por su naturaleza.
+05_aeropuertos_jfk_lga: |
+  Los viajes que empiezan o terminan en JFK o LaGuardia son 322947 en 2025-03 contra 324238 en 2024-03 (-0.40%), con tarifa media de 55.14 contra 55.51 (-0.67%): el segmento aeroportuario casi no cambio. La tarifa es fare_amount, sin propinas, peajes ni recargos.
+06_variacion_entre_meses: |
+  Los viajes crecieron 14.63% (3535967 a 4053277) y la tarifa media bajo 3.65% (19.17 a 18.47). Hipotesis: desde enero de 2025 rige el peaje de congestion en Manhattan; el recargo de los taxis amarillos es menor que el de las aplicaciones, lo que pudo traer mas viajes al taxi en el centro (en P1 crecen sobre todo las zonas del sur de Manhattan). La tarifa baja sin que los viajes sean mas cortos (distancia media 3.28 a 3.25 millas) pero si mas rapidos: duracion media 16.70 a 16.09 min (-3.65%, igual que la tarifa) y velocidad 10.91 a 11.07 mph, coherente con menos trafico. Es una asociacion, no una prueba: no se controlo clima ni dias habiles.
